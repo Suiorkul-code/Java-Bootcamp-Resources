@@ -26,11 +26,10 @@ public class Main {
             System.out.println("Failed to get team: " + e.getMessage());
         }
 
-        // --- List campaigns ---
-        System.out.println("\n=== Campaigns ===");
-        List<Campaign> campaigns = List.of();
+        // --- List existing campaigns ---
+        System.out.println("\n=== Existing Campaigns ===");
         try {
-            campaigns = client.getCampaigns();
+            List<Campaign> campaigns = client.getCampaigns();
             for (Campaign campaign : campaigns) {
                 System.out.println(campaign);
             }
@@ -38,35 +37,57 @@ public class Main {
             System.out.println("Failed to get campaigns: " + e.getMessage());
         }
 
-        // --- Add a lead to the first campaign ---
-        if (!campaigns.isEmpty()) {
-            String campaignId = campaigns.get(0).getId();
-            Lead lead = new Lead("john.doe@example.com", "John", "Doe", "Acme Corp");
-            System.out.println("\n=== Adding Lead to Campaign: " + campaignId + " ===");
-            try {
-                String result = client.addLead(campaignId, lead);
-                System.out.println(result);
-            } catch (Exception e) {
-                System.out.println("Failed to add lead: " + e.getMessage());
-            }
-
-            // --- Get leads in the campaign ---
-            System.out.println("\n=== Leads in Campaign: " + campaignId + " ===");
-            try {
-                String leads = client.getLeads(campaignId);
-                System.out.println(leads);
-            } catch (Exception e) {
-                System.out.println("Failed to get leads: " + e.getMessage());
-            }
+        // --- Create new campaign: Margex Competitor Outreach ---
+        System.out.println("\n=== Creating Campaign: Margex Competitor Outreach ===");
+        Campaign newCampaign = null;
+        try {
+            newCampaign = client.createCampaign("Margex Competitor Outreach");
+            System.out.println("Created: " + newCampaign);
+        } catch (Exception e) {
+            System.out.println("Failed to create campaign: " + e.getMessage());
+            return;
         }
 
-        // --- Get recent activities ---
-        System.out.println("\n=== Activities (emailsSent) ===");
+        // --- Leads gathered from competitor research ---
+        // These are editorial/review contacts at crypto media outlets and directories
+        // where Margex competitors (Binance, Bybit, OKX, Bitget, MEXC) currently rank
+        // but Margex is absent or under-represented.
+        List<Lead> leads = List.of(
+            new Lead("hello@coinbureau.com",       "",          "",          "Coin Bureau"),
+            new Lead("tips@cryptoslate.com",        "",          "",          "CryptoSlate"),
+            new Lead("press@coinspeaker.com",       "",          "",          "CoinSpeaker"),
+            new Lead("tips@ccn.com",                "",          "",          "CCN"),
+            new Lead("editor@cryptopolitan.com",    "",          "",          "Cryptopolitan"),
+            new Lead("contact@cryptopolitan.com",   "",          "",          "Cryptopolitan"),
+            new Lead("ops@cryptopolitan.com",       "",          "",          "Cryptopolitan"),
+            new Lead("gaurav@coincodecap.com",      "Gaurav",    "",          "CoinCodeCap"),
+            new Lead("harshita@coincodecap.com",    "Harshita",  "",          "CoinCodeCap"),
+            new Lead("partner@tradersunion.com",    "",          "",          "TradersUnion"),
+            new Lead("contact@thecryptoupdates.com","",          "",          "TheCryptoUpdates")
+        );
+
+        // --- Add each lead to the new campaign ---
+        String campaignId = newCampaign.getId();
+        System.out.println("\n=== Adding " + leads.size() + " Leads to Campaign: " + campaignId + " ===");
+        int added = 0;
+        for (Lead lead : leads) {
+            try {
+                String result = client.addLead(campaignId, lead);
+                System.out.println("Added [" + lead.getEmail() + "]: " + result);
+                added++;
+            } catch (Exception e) {
+                System.out.println("Failed to add [" + lead.getEmail() + "]: " + e.getMessage());
+            }
+        }
+        System.out.println("\nSuccessfully added " + added + "/" + leads.size() + " leads.");
+
+        // --- Verify leads in the campaign ---
+        System.out.println("\n=== Leads in Campaign: " + campaignId + " ===");
         try {
-            String activities = client.getActivities("emailsSent");
-            System.out.println(activities);
+            String leadsJson = client.getLeads(campaignId);
+            System.out.println(leadsJson);
         } catch (Exception e) {
-            System.out.println("Failed to get activities: " + e.getMessage());
+            System.out.println("Failed to get leads: " + e.getMessage());
         }
     }
 

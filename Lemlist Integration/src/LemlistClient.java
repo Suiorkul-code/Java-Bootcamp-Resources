@@ -56,6 +56,14 @@ public class LemlistClient {
         return delete("/campaigns/" + encode(campaignId) + "/leads/" + encode(email));
     }
 
+    public Campaign createCampaign(String name) throws Exception {
+        String body = "{\"name\":\"" + escapeJson(name) + "\"}";
+        String json = post("/campaigns", body);
+        String id = extractJsonString(json.replaceFirst("^\\{", ""), "_id");
+        String campaignName = extractJsonString(json.replaceFirst("^\\{", ""), "name");
+        return new Campaign(id, campaignName != null ? campaignName : name);
+    }
+
     // -------------------------------------------------------------------------
     // Activities
     // -------------------------------------------------------------------------
